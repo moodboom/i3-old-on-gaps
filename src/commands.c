@@ -528,6 +528,18 @@ static bool cmd_resize_tiling_direction(I3_CMD, Con *current, const char *way, c
     return true;
 }
 
+static int sort_cons_by_smallest_percent_cmp(const void *a, const void *b) {
+    Con *first = *((Con **)a);
+    Con *second = *((Con **)b);
+    if (first->percent < second->percent) {
+        return 1;
+    } else if (first->percent == second->percent) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
 static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *way, const char *direction, int ppt) {
     LOG("width/height resize\n");
 
@@ -554,20 +566,12 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *way
             child->percent = percentage;
     }
 
-    double new_current_percent = current->percent + ((double)ppt / 100.0);
-    double subtract_percent = ((double)ppt / 100.0) / (children - 1);
+    double remaining_shrinkage = ((double)ppt / 100.0);
+    double new_current_percent = current->percent + remaining_shrinkage;
+    double subtract_percent = remaining_shrinkage / (children - 1);
     LOG("new_current_percent = %f\n", new_current_percent);
     LOG("subtract_percent = %f\n", subtract_percent);
-    /* Ensure that the new percentages are positive. */
-    TAILQ_FOREACH(child, &(current->parent->nodes_head), nodes) {
-        if (child == current)
-            continue;
-        if (child->percent - subtract_percent <= 0.0) {
-            LOG("Not resizing, already at minimum size (child %p would end up with a size of %.f\n", child, child->percent - subtract_percent);
-            ysuccess(false);
-            return false;
-        }
-    }
+
     if (new_current_percent <= 0.0) {
         LOG("Not resizing, already at minimum size\n");
         ysuccess(false);
@@ -577,6 +581,38 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *way
     current->percent = new_current_percent;
     LOG("current->percent after = %f\n", current->percent);
 
+    // Grow
+    if (ppt > 0.0)
+    {
+        // Sort cons by percent
+        Con **tmp = scalloc(children, sizeof(Con *));
+        int loop = 0;
+        TAILQ_FOREACH(child, &(current->parent->nodes_head), nodes)
+        {
+            tmp[loop++] = child;
+        }
+        qsort(tmp, children, sizeof(Con *), sort_cons_by_smallest_percent_cmp);
+
+        // Walk children and shrink as appropriate.
+        // Less-than-avg children will give what they can, and the remaining avg adjusted accordingly.
+        for (loop = 0; loop < children; ++loop)
+        {
+            if (tmp[loop] == current)
+                continue;
+            if (tmp[loop]->percent <= subtract_percent)
+            {
+                remaining_shrinkage -= tmp[loop]->percent;
+                subtract_percent = remaining_shrinkage / (children - 1 - loop);
+                tmp[loop]->percent = 0.0;
+            } else
+                tmp[loop]->percent -= subtract_percent;
+        }
+
+        free(tmp);
+        return true;
+    }
+
+    // Shrink
     TAILQ_FOREACH(child, &(current->parent->nodes_head), nodes) {
         if (child == current)
             continue;

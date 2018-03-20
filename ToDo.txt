@@ -1,0 +1,97 @@
+bitpost i3.git is a moodboom fork of airblader i3 "gaps" fork of i3
+    get the resize grow command fixed there and send it up to airblader!
+
+resize command is handled here:
+    https://github.com/moodboom/i3/blob/gaps-next/src/commands.c
+
+debugging i3:
+
+    #1) turn on debugging:
+            i3-msg 'debuglog on; shmlog on; reload'
+            # then see output any time
+            i3-dump-log
+
+    #2) run the problematic command
+
+command syntax error
+    in my case it was out of the config file, but youcan run it directly
+
+            i3-msg 'append_layout /home/m/i3_layouts/i3_layout_5.json'
+
+    after slogging through a bit of it... watching timestamps carefully...
+    i found it!
+            ERROR: Cannot open file "/home/m/i3_layouts/i3_layout_5.json'"
+    the tick was stuck on the end!
+    needed a semicolon, and IT RUNS but... it doesnt end well
+    how should we end the i3-msg command???  f'in weirdness
+    put the path in double quotes and we are good to go!
+
+    recent quotes handling documentation:
+            https://github.com/i3/i3/commit/29275598e5482308c202f83c6\
+
+here is my resize configuration:
+
+    # ====================
+    # FAST RESIZE
+    # ====================
+    # MDM this fast resize is way better than a chord mode!
+    # Add Shift with up/down to grow/shrink both dimensions.
+    # ====================
+    bindsym $mod+Control+Left resize shrink width 10 px or 3 ppt
+    bindsym $mod+Control+Right resize grow width 10 px or 3 ppt
+    bindsym $mod+Control+Up resize grow height 10 px or 3 ppt
+    bindsym $mod+Control+Down resize shrink height 10 px or 3 ppt
+    bindsym $mod+Control+Shift+Up resize grow height 10 px or 3 ppt; resize grow width 10 px or 3 ppt
+    bindsym $mod+Control+Shift+Down resize shrink height 10 px or 3 ppt; resize shrink width 10 px or 3 ppt
+    # ====================
+
+//--------------------------------------------------------------------//
+//   ^ DONE ^
+//
+//          i3-msg 'debuglog on; shmlog on; reload'
+//          # then see output any time
+//          i3-dump-log
+//
+// v IN PROGRESS v
+//--------------------------------------------------------------------//
+
+map out function call path for current [resize grow]:
+
+    commands.c
+
+        our usage:   resize grow|shrink width|height 10 px or 3 ppt
+        our concern: resize grow width|height 10 px or 3 ppt
+
+        void cmd_resize(I3_CMD, const char *way, const char *direction, long resize_px, long resize_ppt) {
+            if direction == height or width,
+                cmd_resize_tiling_width_height
+            else
+                cmd_resize_tiling_direction
+            ---
+            static bool cmd_resize_tiling_direction(I3_CMD, Con *current, const char *way, const char *direction, int ppt) {
+            ^
+            so we hit this, with ppt set to 3 (NOTE: it would be -3 if we were shrinking)
+            direction will be right/left/up/down
+
+    not sure how it can check for percentages less than zero, that seems to ignore minimum size and borders. fucked up.
+
+    here's the pseudo!
+    it's only for grow, but that's ok as shrink is simple
+
+    // Let current window grow to absorb as much as is available from other children
+    // The other children are in one of three categories: 1) minimum 2) less than subtract_pct 3) >= subtract_pct
+    // Always ignore (1) in all activity.
+    // 1) sort containers from smallest to largest
+    // 2) walk them, tracking remaining_shrinkage_required
+    //      if (current < avg)
+    //          shrink current to zero and recalc avg
+    //      else current -= avg
+
+    how can we sort the containers?
+    follow the only other use of qsort i found, in bindings.c
+    easy peasy
+
+    WHAT IS THIS?
+        /* Ensure all the other children have a percentage set. */
+        it resets all zeros, why??
+
