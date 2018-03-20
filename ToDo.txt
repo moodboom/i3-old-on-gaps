@@ -1,0 +1,148 @@
+bitpost i3.git is a moodboom fork of airblader i3 "gaps" fork of i3
+    get the resize grow command fixed there and send it up to airblader!
+
+resize command is handled here:
+    https://github.com/moodboom/i3/blob/gaps-next/src/commands.c
+
+debugging i3:
+
+    #1) turn on debugging:
+            i3-msg 'debuglog on; shmlog on; reload'
+            # then see output any time
+            i3-dump-log -f
+
+    #2) run the problematic command
+
+command syntax error
+    in my case it was out of the config file, but youcan run it directly
+
+            i3-msg 'append_layout /home/m/i3_layouts/i3_layout_5.json'
+
+    after slogging through a bit of it... watching timestamps carefully...
+    i found it!
+            ERROR: Cannot open file "/home/m/i3_layouts/i3_layout_5.json'"
+    the tick was stuck on the end!
+    needed a semicolon, and IT RUNS but... it doesnt end well
+    how should we end the i3-msg command???  f'in weirdness
+    put the path in double quotes and we are good to go!
+
+    recent quotes handling documentation:
+            https://github.com/i3/i3/commit/29275598e5482308c202f83c6\
+
+here is my resize configuration:
+
+    # ====================
+    # FAST RESIZE
+    # ====================
+    # MDM this fast resize is way better than a chord mode!
+    # Add Shift with up/down to grow/shrink both dimensions.
+    # ====================
+    bindsym $mod+Control+Left resize shrink width 10 px or 3 ppt
+    bindsym $mod+Control+Right resize grow width 10 px or 3 ppt
+    bindsym $mod+Control+Up resize grow height 10 px or 3 ppt
+    bindsym $mod+Control+Down resize shrink height 10 px or 3 ppt
+    bindsym $mod+Control+Shift+Up resize grow height 10 px or 3 ppt; resize grow width 10 px or 3 ppt
+    bindsym $mod+Control+Shift+Down resize shrink height 10 px or 3 ppt; resize shrink width 10 px or 3 ppt
+    # ====================
+
+map out function call path for current [resize grow]:
+
+    commands.c
+
+        our usage:   resize grow|shrink width|height 10 px or 3 ppt
+        our concern: resize grow width|height 10 px or 3 ppt
+
+        void cmd_resize(I3_CMD, const char *way, const char *direction, long resize_px, long resize_ppt) {
+            if direction == height or width,
+                cmd_resize_tiling_width_height
+            else
+                cmd_resize_tiling_direction
+            ---
+            static bool cmd_resize_tiling_direction(I3_CMD, Con *current, const char *way, const char *direction, int ppt) {
+            ^
+            so we hit this, with ppt set to 3 (NOTE: it would be -3 if we were shrinking)
+            direction will be right/left/up/down
+
+    not sure how it can check for percentages less than zero, that seems to ignore minimum size and borders. fucked up.
+
+    here's the pseudo!
+    it's only for grow, but that's ok as shrink is simple
+
+    // Let current window grow to absorb as much as is available from other children
+    // The other children are in one of three categories: 1) minimum 2) less than subtract_pct 3) >= subtract_pct
+    // Always ignore (1) in all activity.
+    // 1) sort containers from smallest to largest
+    // 2) walk them, tracking remaining_shrinkage_required
+    //      if (current < avg)
+    //          shrink current to zero and recalc avg
+    //      else current -= avg
+
+    how can we sort the containers?
+    follow the only other use of qsort i found, in bindings.c
+    easy peasy
+
+    WHAT IS THIS?
+        /* Ensure all the other children have a percentage set. */
+        it resets all zeros, why??
+
+    CODED
+    next, we debug
+
+test/debug
+    crashing!
+    i3_debug.sh > ~/i3_debug.log
+    # resize window in a container, boom!
+
+    Looks like it is NOT shrinking the targets:
+    03/20/18 13:59:45 - default percentage = 0.333333
+    03/20/18 13:59:45 - child->percent = 0.333333 (child 0x559bf136d880)
+    03/20/18 13:59:45 - child->percent = 0.333333 (child 0x559bf136f4d0)
+    03/20/18 13:59:45 - child->percent = 0.333333 (child 0x559bf1374a20)
+    03/20/18 13:59:45 - new_current_percent = 0.363333
+    03/20/18 13:59:45 - subtract_percent = 0.015000
+    03/20/18 13:59:45 - current->percent after = 0.363333
+    03/20/18 13:59:45 - child->percent before (0x559bf136d880) = 0.333333
+    03/20/18 13:59:45 - child->percent after (0x559bf136d880) = 0.333333
+    03/20/18 13:59:45 - child->percent before (0x559bf136f4d0) = 0.333333
+    03/20/18 13:59:45 - child->percent after (0x559bf136f4d0) = 0.333333
+
+    i see a couple issues
+    1) current "Shrink" shrinking must be limited to no more than minimum - but handle partial!
+    2) we need to reduce remaining_shrinkage in all cases
+    3) we need to return false if there was no shrinkage opportunity
+
+    CODED
+
+     🐍 m@viper  [~/development/i3] git-log
+    1b61e496 14 minutes.. crash get a log                                                   HEAD -> ga.. Michael Behrns-Miller [viper]
+    cd5aa360 25 minutes.. crash                                                              tag: 4.15.9 Michael Behrns-Miller [viper]
+    6f17e4be 34 minutes.. More betta maths                                                   tag: 4.15.8 Michael Behrns-Miller [viper]
+    b25da257  5 hours ago planning                                                           tag: 4.15.7 Michael Behrns-Miller [mbehrnsm-silver]
+    06284716  6 hours ago Log of plan                                                        tag: 4.15.6 Michael Behrns-Miller [mbehrnsm-silver]
+
+//--------------------------------------------------------------------//
+//   ^ DONE ^
+//
+//          i3-msg 'debuglog on; shmlog on; reload'
+//          # then see output any time
+//          i3-dump-log
+//
+// v IN PROGRESS v
+//--------------------------------------------------------------------//
+
+test/debug
+    mo crash, this time i'm using prada
+    i3_debug.sh > ~/i3_debug.log
+    sent it to viper
+
+    03/20/2018 08:43:49 PM - width/height resize
+    03/20/2018 08:43:49 PM - resize.c:resize_find_tiling_participants:51 - Find two participants for resizing container=0x7ffe64760630 in direction=3
+    03/20/2018 08:43:49 PM - resize.c:resize_find_tiling_participants:93 - Found participants: first=0x55c47bbe0640 and second=0x55c47bbdfa10.
+    03/20/2018 08:43:49 PM - ins. 2 children
+    03/20/2018 08:43:49 PM - default percentage = 0.500000
+    03/20/2018 08:43:49 PM - child->percent = 0.470000 (child 0x55c47bbdfa10)
+    03/20/2018 08:43:49 PM - child->percent = 0.530000 (child 0x55c47bbe0640)
+    03/20/2018 08:43:49 PM - current->percent before = 0.530000
+    03/20/2018 08:43:49 PM - current->percent after = 0.560000
+    03/20/2018 08:43:49 PM - subtract_percent = -0.030000
+    03/20/2018 08:43:49 PM - child->percent after (0x55c47bbdfa10) = 0.500000
