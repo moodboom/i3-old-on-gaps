@@ -120,16 +120,6 @@ test/debug
     b25da257  5 hours ago planning                                                           tag: 4.15.7 Michael Behrns-Miller [mbehrnsm-silver]
     06284716  6 hours ago Log of plan                                                        tag: 4.15.6 Michael Behrns-Miller [mbehrnsm-silver]
 
-//--------------------------------------------------------------------//
-//   ^ DONE ^
-//
-//          i3-msg 'debuglog on; shmlog on; reload'
-//          # then see output any time
-//          i3-dump-log
-//
-// v IN PROGRESS v
-//--------------------------------------------------------------------//
-
 test/debug
     mo crash, this time i'm using prada
     i3_debug.sh > ~/i3_debug.log
@@ -146,3 +136,42 @@ test/debug
     03/20/2018 08:43:49 PM - current->percent after = 0.560000
     03/20/2018 08:43:49 PM - subtract_percent = -0.030000
     03/20/2018 08:43:49 PM - child->percent after (0x55c47bbdfa10) = 0.500000
+
+    it's been GREAT debugging i3!!!  it's fucking FABULOUS for these reasons:
+        it crashes right away if the math is off YES
+        when it crashes, it fucking pops a screen that lets you pick to get a gdb trace (never tried) and RESTART IN PLACE, WOW
+        it provides an ability to turn on logging and restart; the logging is in memory which if you NEED, you can pipe to file, NICE
+            i need to do this in ABT
+
+    FIXED
+    working!
+
+//--------------------------------------------------------------------//
+//   ^ DONE ^
+//
+//          i3-msg 'debuglog on; shmlog on; reload'
+//          # then see output any time
+//          i3-dump-log
+//
+//          Approved [resize supergrow] enhancement: https://github.com/i3/i3/issues/3174
+//          Pull request: https://github.com/i3/i3/pull/3194
+//
+// v IN PROGRESS v
+//--------------------------------------------------------------------//
+
+Submitted pull request
+    had to set up official i3 and use branch [next]
+    i just pasted the code there, and pushed
+    then from moodboom:i3
+    pull request is here: https://github.com/i3/i3/pull/3194
+        in review
+        related issue:
+            https://github.com/i3/i3/issues/3071
+            refers to problems with a hardcoded 5% (too big for one user, so it was removed(!))
+            airblader covers all the issues of the current strategy of stopping if any negative is hit
+                sucks but no one minimum will work for everyone
+                SO ADD A CONFIG OR PARAM, it seems to me
+
+    Considering:
+        By the way, I'm using this now - if you can try this out, it really feels good, so maybe worth adding configurations.  I guess that's the very definition of subjective though!  :-)
+
