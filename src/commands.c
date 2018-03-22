@@ -564,11 +564,11 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *way
     /* Consider making this configurable. */
     // double min_pct = fabs(ppt / 100.0 / children);
     // const double min_pct = 0.03;
-    double min_pct = fabs(ppt/100.0);
+    double min_pct = fabs(ppt / 100.0);
 
     /* Grow */
     if (ppt > 0) {
-        /* Sort cons by percent */
+        /* Sort cons by ascending percent */
         Con **tmp = scalloc(children, sizeof(Con *));
         int loop = 0;
         TAILQ_FOREACH(child, &(current->parent->nodes_head), nodes) {
