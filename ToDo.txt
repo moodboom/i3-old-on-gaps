@@ -146,6 +146,32 @@ test/debug
     FIXED
     working!
 
+posted request for feedback to i3wm subreddit
+
+    https://www.reddit.com/r/i3wm/comments/86nvzr/help_test_improved_resize_grow_that_will_shrink/
+
+    Here is another explanation via ASCII art...
+
+         Attempt to widen this column
+         v
+    __________________
+    |  |     |       |
+    |  |     |       |
+    |  |     |       |
+    |  |     |       |
+    |__|_____|_______|
+
+     Once this column hits min width...
+     |       ... this won't shrink further
+     v            v
+    __________________
+    | |        |     |
+    | |        |     |
+    | |        |     |
+    | |        |     |
+    |_|________|_____|
+
+
 //--------------------------------------------------------------------//
 //   ^ DONE ^
 //
