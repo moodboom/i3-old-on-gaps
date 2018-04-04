@@ -559,7 +559,7 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *way
     /* ---------------------------------------------------------------------------------- */
     /* Option 1 */
     /* We are considering making this a configurable parameter. */
-    const double min_pct = 0.04;
+    const double min_pct = 0.06;
     /* ---------------------------------------------------------------------------------- */
     /* Option 2 */
     /* Here, we try to automatically calculate a reasonable min size. */
