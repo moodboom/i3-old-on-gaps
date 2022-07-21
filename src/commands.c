@@ -499,6 +499,11 @@ static bool cmd_resize_tiling_direction(I3_CMD, Con *current, const char *direct
     return resize_neighboring_cons(first, second, px, ppt);
 }
 
+static int compare_cons_by_percent(const void *a, const void *b) {
+    Con *first = *((Con **)a);
+    Con *second = *((Con **)b);
+    return second->percent - first->percent;
+}
 static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *direction, int px, double ppt) {
     LOG("width/height resize\n");
 
@@ -524,6 +529,8 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *dir
         if (child->percent == 0.0)
             child->percent = percentage;
     }
+
+    // MDM upstream code as of 2022/07/20
 
     double new_current_percent;
     double subtract_percent;
@@ -557,6 +564,90 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *dir
 
     current->percent = new_current_percent;
     LOG("current->percent after = %f\n", current->percent);
+
+
+    // MDM My 2018 enhancement
+
+
+    // LOG("current->percent before = %f\n", current->percent);
+
+    // /* min size */
+    // /* ---------------------------------------------------------------------------------- */
+    // /* Option 1 */
+    // /* We are considering making this a configurable parameter. */
+    // const double min_pct = 0.06;
+    // /* ---------------------------------------------------------------------------------- */
+    // /* Option 2 */
+    // /* Here, we try to automatically calculate a reasonable min size. */
+    // /* We will start off with using ppt, then constrain further so that */
+    // /* min_pct is not be bigger than the average percentage calculated above. */
+    // // double min_pct = fmin(percentage, fabs(ppt / 100.0 / children));
+    // /* ---------------------------------------------------------------------------------- */
+
+    // // double min_pct = fmax(0.03, fmin(percentage, fabs(ppt / 100.0 / children)));
+
+    // /* Grow */
+    // if (ppt > 0) {
+    //     /* Sort cons by ascending percent */
+    //     Con **tmp = scalloc(children, sizeof(Con *));
+    //     int loop = 0;
+    //     TAILQ_FOREACH(child, &(current->parent->nodes_head), nodes) {
+    //         tmp[loop++] = child;
+    //     }
+    //     qsort(tmp, children, sizeof(Con *), compare_cons_by_percent);
+
+    //     /* Walk children and shrink as appropriate. */
+    //     /* Less-than-avg children will give what they can, and the remaining avg adjusted accordingly. */
+    //     double requested_grow = ((double)ppt / 100.0);
+    //     double total_remaining_shrinkage = requested_grow;
+    //     int children_remaining = children - 1;
+    //     for (loop = 0; loop < children; ++loop) {
+    //         Con *child = tmp[loop]; /* readability */
+    //         if (child == current)
+    //             continue;
+    //         double subtract_percent = total_remaining_shrinkage / children_remaining;
+    //         --children_remaining;
+    //         if (child->percent <= min_pct)
+    //             continue;
+    //         LOG("child->percent before (%p) = %f\n", child, child->percent);
+    //         if (child->percent <= subtract_percent + min_pct) /* partial shrink */
+    //             subtract_percent = child->percent - min_pct;
+    //         total_remaining_shrinkage -= subtract_percent;
+    //         child->percent -= subtract_percent;
+    //         LOG("child->percent after (%p) = %f\n", child, child->percent);
+    //     }
+    //     free(tmp);
+
+    //     if (requested_grow == total_remaining_shrinkage) {
+    //         LOG("Not resizing, already at maximum size\n");
+    //         ysuccess(false);
+    //         return false;
+    //     }
+    //     current->percent += (requested_grow - total_remaining_shrinkage);
+    //     LOG("current->percent after = %f\n", current->percent);
+
+    //     return true;
+    // }
+
+    // /* Shrink */
+    // if (current->percent <= min_pct) {
+    //     LOG("Not resizing, already at minimum size\n");
+    //     ysuccess(false);
+    //     return false;
+    // }
+
+    // double requested_shrink = ((double)ppt / 100.0);
+
+    // /* Check for partial shrink */
+    // if (current->percent + requested_shrink <= min_pct)
+    //     requested_shrink = min_pct - current->percent;
+
+    // current->percent += requested_shrink;
+    // LOG("current->percent after = %f\n", current->percent);
+    // double subtract_percent = requested_shrink / (children - 1);
+    // LOG("subtract_percent = %f\n", subtract_percent);
+
+
 
     TAILQ_FOREACH (child, &(current->parent->nodes_head), nodes) {
         if (child == current)
