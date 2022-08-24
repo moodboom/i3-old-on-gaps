@@ -601,7 +601,7 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *dir
 
         /* Walk children and shrink as appropriate. */
         /* Less-than-avg children will give what they can, and the remaining avg adjusted accordingly. */
-        double requested_grow = ((double)ppt / 100.0);
+        double requested_grow = (double)ppt;
         double total_remaining_shrinkage = requested_grow;
         int children_remaining = children - 1;
         for (loop = 0; loop < children; ++loop) {
@@ -639,7 +639,7 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *dir
         return false;
     }
 
-    double requested_shrink = ((double)ppt / 100.0);
+    double requested_shrink = (double)ppt;
 
     /* Check for partial shrink */
     if (current->percent + requested_shrink <= min_pct)
