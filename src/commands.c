@@ -530,8 +530,10 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *dir
             child->percent = percentage;
     }
 
-    // MDM upstream code as of 2022/07/20
 
+    // -----------------------
+    // MDM upstream code as of 2022/07/20
+    // -----------------------
     // double new_current_percent;
     // double subtract_percent;
     // if (ppt != 0.0) {
@@ -564,13 +566,12 @@ static bool cmd_resize_tiling_width_height(I3_CMD, Con *current, const char *dir
 
     // current->percent = new_current_percent;
     // LOG("current->percent after = %f\n", current->percent);
-
+    // -----------------------
 
 
     // -----------------------
     // MDM My 2018 enhancement
     // -----------------------
-
     LOG("current->percent before = %f\n", current->percent);
 
     /* min size */
