@@ -239,6 +239,8 @@ posted request for feedback to i3wm subreddit
 //--------------------------------------------------------------------//
 //   ^ DONE ^
 //
+//          TO BUILD AND INSTALL: mh-setup-i3
+//
 //          i3-msg 'debuglog on; shmlog on; reload'
 //          # then see output any time
 //          i3-dump-log
@@ -252,8 +254,18 @@ posted request for feedback to i3wm subreddit
 - continue to rebase my commented out code onto latest upstream i3-gaps (forget i3 for now)
     so far it's been trivial, there are very few upstream changes
     1 go to my fork on github
-        https://github.com/moodboom/i3
-    2 select 
+        https://github.com/moodboom/i3 (forked from Airblader/i3)
+    2 merge upstream to my i3-gaps branch (make sure no merge commit is added)
+    3 update i3-gaps locally and rebase onto i3-gaps-moodboom (aka i3-supersize)
+        git checkout i3-gaps-moodboom
+        git rebase -i i3-gaps
+
+- update my code from 2018 to work with 2022/08 codebase
+    - need to refactor into 1-pixel bullshit they did
+    - update size-harvesting supersize code
+
+    DO IT
+
 
 - after merging upstream in 2022/08, stupid gaps has a bug now
     the gap channel isn't drawn between children
