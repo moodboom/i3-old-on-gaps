@@ -7,7 +7,7 @@ i3-supersize is a fork of [i3-gaps](https://github.com/Airblader/i3), which is a
 i3-supersize only has one feature added to its excellent upstream projects.  But for my use case, it is an essential feature addressing fatal flaws in i3's window management.  In my optimized workflow on a 4K monitor, I dynamically resize my tiled windows constantly, via keyboard, and need any window to grow and shrink without arbitrary constraints, except to stop shrinkage at a minimum useable width and minimum useable height.
 
 A short video provides the simplest explanation.
-![i3](https://github.com/moodboom/i3/raw/gaps-next-moodboom/docs/i3-supersize.mp4)
+![Example](https://github.com/moodboom/i3/raw/gaps-next-moodboom/docs/i3-supersize.mp4)
 
 ## How do I install, configure, etc.?
 
