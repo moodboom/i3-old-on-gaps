@@ -11,7 +11,9 @@ A short video provides the simplest explanation.
 
 ## How do I install, configure, etc.?
 
-Please refer to the [i3-gaps](https://github.com/Airblader/i3) project for excellent documentation, including [installation](https://github.com/Airblader/i3/wiki/installation).
+Install using the **gaps-next-moodboom** branch.
+
+Please refer to the [i3-gaps](https://github.com/Airblader/i3) project for excellent documentation, including detailed [installation instructions](https://github.com/Airblader/i3/wiki/installation).
 
 # History
 
