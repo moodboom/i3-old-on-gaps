@@ -163,15 +163,9 @@ i3_event_state_mask_t event_state_from_str(const char *str) {
     return result;
 }
 
-static char *font_pattern;
-
 CFGFUN(font, const char *font) {
     config.font = load_font(font, true);
     set_font(&config.font);
-
-    /* Save the font pattern for using it as bar font later on */
-    FREE(font_pattern);
-    font_pattern = sstrdup(font);
 }
 
 CFGFUN(binding, const char *bindtype, const char *modifiers, const char *key, const char *release, const char *border, const char *whole_window, const char *exclude_titlebar, const char *command) {
@@ -186,6 +180,11 @@ static char *current_mode;
 static bool current_mode_pango_markup;
 
 CFGFUN(mode_binding, const char *bindtype, const char *modifiers, const char *key, const char *release, const char *border, const char *whole_window, const char *exclude_titlebar, const char *command) {
+    if (current_mode == NULL) {
+        /* When using an invalid mode name, e.g. “default” */
+        return;
+    }
+
     configure_binding(bindtype, modifiers, key, release, border, whole_window, exclude_titlebar, command, current_mode, current_mode_pango_markup);
 }
 
@@ -913,10 +912,6 @@ CFGFUN(bar_finish) {
         sasprintf(&current_bar->id, "bar-%d", config.number_barconfigs);
 
     config.number_barconfigs++;
-
-    /* If no font was explicitly set, we use the i3 font as default */
-    if (current_bar->font == NULL && font_pattern != NULL)
-        current_bar->font = sstrdup(font_pattern);
 
     TAILQ_INSERT_TAIL(&barconfigs, current_bar, configs);
     /* Simply reset the pointer, but don't free the resources. */
