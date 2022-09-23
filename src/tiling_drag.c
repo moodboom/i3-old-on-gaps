@@ -19,7 +19,11 @@ static xcb_window_t create_drop_indicator(Rect rect);
 static Rect con_rect_plus_deco_height(Con *con) {
     Rect rect = con->rect;
     rect.height += con->deco_rect.height;
-    rect.y -= con->deco_rect.height;
+    if (rect.y < con->deco_rect.height) {
+        rect.y = 0;
+    } else {
+        rect.y -= con->deco_rect.height;
+    }
     return rect;
 }
 
@@ -374,6 +378,7 @@ void tiling_drag(Con *con, xcb_button_press_event_t *event) {
         con_enable_fullscreen(con, CF_OUTPUT);
     }
     if (set_focus) {
+        workspace_show(con_get_workspace(con));
         con_focus(con);
     }
     tree_render();
